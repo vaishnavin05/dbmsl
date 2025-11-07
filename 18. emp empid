@@ -1,0 +1,36 @@
+* 18.Emp(emp_id,ename, street, city) 
+works(emp_id,c_id,ename, cname, sal) 
+Company(c_id,cname, city) 
+Manager(mgr_id, mgrname) 
+i. Modify the database so that a particular company (eg. ABC) now in Pune 
+ii. Give all managers of Mbank a 10% raise. If salary is >20,000, give only 3% raise. 
+iii. Find out the names of all the employees who works in ‘Bosch’ company in city Pune 
+iv. Delete all records in the works table for employees of a particular company (Eg, SBC Company) whose salary>50,000. 
+
+ */ 
+
+-- 1. PURPOSE: Update the city of a particular company (e.g., ABC) to Pune
+UPDATE Company
+SET city = 'Pune'
+WHERE cname = 'ABC';
+
+-- 2. PURPOSE: Give managers of Mbank a salary raise based on conditions
+-- Assuming salary is stored in 'works' table and managers are linked to company through 'c_id'
+UPDATE works
+SET sal = CASE 
+            WHEN sal > 20000 THEN sal * 1.03
+            ELSE sal * 1.10
+          END
+WHERE cname = 'Mbank';
+
+-- 3. PURPOSE: Find names of all employees working in 'Bosch' in Pune
+SELECT e.ename
+FROM Emp e
+JOIN works w ON e.emp_id = w.emp_id
+JOIN Company c ON w.c_id = c.c_id
+WHERE c.cname = 'Bosch' AND c.city = 'Pune';
+
+-- 4. PURPOSE: Delete records from works table for employees of SBC Company with salary > 50000
+DELETE FROM works
+WHERE c_id = (SELECT c_id FROM Company WHERE cname = 'SBC')
+  AND sal > 50000;
