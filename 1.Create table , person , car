@@ -1,0 +1,151 @@
+/* 1.	Create following tables with primary and foreign key and solve the queries given below
+Person (driver_id, name, address)
+Car (license, model, year)
+Accident (report_no, date_acc, location)
+Owns (driver_id, license)
+Participated (driver_id,  model,  report_no, damage_amount)
+1.	Insert records into each table
+2.	Create a view named Driver_Car_View to show each driver’s name and the car model they own.
+3.	Display all records from the Driver_Car_View.
+4.	Modify the existing view Driver_Car_View to include the car’s year of manufacture.
+5.	Create a sequence named seq_report_no starting from 6001 and increment by 5 for new accidents.
+6.	Create a composite index on model and year columns of the Car table.
+a.	Create a view to show all drivers who participated in accidents with damage amount greater than ₹20,000.
+7.	Create a sequence named seq_driver_id to auto-generate driver IDs starting from 201 and increment by 1.
+8.	Insert a new record into Person using the Sequence.
+9.	Create an index on the name column of the Person table for faster searching.
+10.	Drop the index created on name column of Person.
+11.	Create a view named Recent_Accidents that shows accidents that occurred in the year 2025.
+12.	Drop the view Recent_Accidents.
+13.	Create a synonym named acc_info for the Accident table.
+14.	Insert a new accident record using the acc_info synonym.
+15.	Create a unique index on license column of the Car table.   
+16.	Create a view to display all drivers who own cars manufactured after 2019.
+17.	Create a sequence to generate accident report numbers automatically and use it in an INSERT statement.
+18.	Create a synonym for the Owns table and use it to list all driver–car pairs.
+19.	Create an index to improve the performance of queries filtering by damage_amount
+*/ 
+
+-- Drop existing tables if re-running the script
+create database db;
+USE db;
+DROP TABLE IF EXISTS Participated;
+DROP TABLE IF EXISTS Owns;
+DROP TABLE IF EXISTS Accident;
+DROP TABLE IF EXISTS Car;
+DROP TABLE IF EXISTS Person;
+
+-- Create Person table
+CREATE TABLE Person (
+    driver_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    address VARCHAR(100)
+);
+
+-- Create Car table
+CREATE TABLE Car (
+    license VARCHAR(20) PRIMARY KEY,
+    model VARCHAR(50),
+    year INT
+);
+
+-- Create Accident table
+CREATE TABLE Accident (
+    report_no INT AUTO_INCREMENT PRIMARY KEY,
+    date_acc DATE,
+    location VARCHAR(100)
+);
+
+-- Create Owns table
+CREATE TABLE Owns (
+    driver_id INT,
+    license VARCHAR(20),
+    PRIMARY KEY (driver_id, license),
+    FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+    FOREIGN KEY (license) REFERENCES Car(license)
+);
+
+-- Create Participated table
+CREATE TABLE Participated (
+    driver_id INT,
+    model VARCHAR(50),
+    report_no INT,
+    damage_amount DECIMAL(10,2),
+    FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+    FOREIGN KEY (report_no) REFERENCES Accident(report_no)
+);
+
+-- Insert data into Person
+INSERT INTO Person (driver_id, name, address) VALUES
+(201, 'Rahul Sharma', 'Delhi'),
+(202, 'Priya Verma', 'Mumbai'),
+(203, 'Amit Patel', 'Ahmedabad');
+
+-- Insert data into Car
+INSERT INTO Car VALUES
+('DL01AB1234', 'Hyundai i20', 2020),
+('MH12CD5678', 'Honda City', 2018),
+('GJ05EF4321', 'Tata Nexon', 2022);
+
+-- Insert data into Accident
+INSERT INTO Accident (report_no, date_acc, location) VALUES
+(6001, '2025-01-10', 'Delhi'),
+(6006, '2025-03-12', 'Mumbai'),
+(6011, '2024-11-05', 'Ahmedabad');
+
+-- Insert data into Owns
+INSERT INTO Owns VALUES
+(201, 'DL01AB1234'),
+(202, 'MH12CD5678'),
+(203, 'GJ05EF4321');
+
+-- Insert data into Participated
+INSERT INTO Participated VALUES
+(201, 'Hyundai i20', 6001, 15000.00),
+(202, 'Honda City', 6006, 25000.00),
+(203, 'Tata Nexon', 6011, 18000.00);
+
+-- Create views
+CREATE OR REPLACE VIEW Driver_Car_View AS
+SELECT p.name, c.model, c.year
+FROM Person p
+JOIN Owns o ON p.driver_id = o.driver_id
+JOIN Car c ON o.license = c.license;
+
+-- Create another view for high-damage drivers
+CREATE OR REPLACE VIEW High_Damage_Drivers AS
+SELECT p.name, pa.damage_amount
+FROM Person p
+JOIN Participated pa ON p.driver_id = pa.driver_id
+WHERE pa.damage_amount > 20000;
+
+-- Add a new person (AUTO_INCREMENT handles driver_id)
+INSERT INTO Person (name, address)
+VALUES ('Neha Singh', 'Bangalore');
+
+-- Create indexes
+CREATE INDEX idx_car_model_year ON Car(model, year);
+CREATE UNIQUE INDEX idx_car_license_unique ON Car(license);
+CREATE INDEX idx_participated_damage ON Participated(damage_amount);
+
+-- Create a simple view for recent accidents (2025)
+CREATE OR REPLACE VIEW Recent_Accidents AS
+SELECT * FROM Accident
+WHERE YEAR(date_acc) = 2025;
+
+-- Create a view for new car drivers
+CREATE OR REPLACE VIEW New_Car_Drivers AS
+SELECT p.name, c.model, c.year
+FROM Person p
+JOIN Owns o ON p.driver_id = o.driver_id
+JOIN Car c ON o.license = c.license
+WHERE c.year > 2019;
+
+-- Create another view for Owns table
+CREATE OR REPLACE VIEW owns_info AS SELECT * FROM Owns;
+
+-- Query to check joined data
+SELECT p.name, c.model
+FROM owns_info o
+JOIN Person p ON o.driver_id = p.driver_id
+JOIN Car c ON o.license = c.license;
