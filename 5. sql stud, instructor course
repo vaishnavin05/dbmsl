@@ -1,0 +1,118 @@
+/* 5.Create following tables with primary and foreign key and solve the queries given below
+student(S_ID,name,dept_name,tot_cred) 
+instructor(T_ID,name,dept_name,salary) 
+course(course_id,title,dept_name,credits) 
+i. Find the average salary of instructor in those departments where the average salary is more than Rs. 42000/-. 
+ii. Increase the salary of each instructor in the computer department by 10%. 
+iii. Find the names of instructors whose names are neither ‘Amol’ nor ‘Amit’. 
+iv. Find the names of student which contains ‘am’ as its substring. 
+v. Find the name of students from computer department that “DBMS” courses they take. 
+*/
+
+// NOT SURE THIS IS CORRECT 
+
+-- Create database and use it
+CREATE DATABASE IF NOT EXISTS collegeDB;
+USE collegeDB;
+
+-- Drop existing tables if any
+DROP TABLE IF EXISTS course;
+DROP TABLE IF EXISTS instructor;
+DROP TABLE IF EXISTS student;
+
+------------------------------------------------------------
+-- Step 1: Create Tables
+------------------------------------------------------------
+CREATE TABLE student (
+    S_ID INT PRIMARY KEY,
+    name VARCHAR(50),
+    dept_name VARCHAR(50),
+    tot_cred INT
+);
+
+CREATE TABLE instructor (
+    T_ID INT PRIMARY KEY,
+    name VARCHAR(50),
+    dept_name VARCHAR(50),
+    salary DECIMAL(10,2),
+    UNIQUE (dept_name)  -- ✅ Needed to allow foreign key reference
+);
+
+CREATE TABLE course (
+    course_id INT PRIMARY KEY,
+    title VARCHAR(50),
+    dept_name VARCHAR(50),
+    credits INT,
+    FOREIGN KEY (dept_name) REFERENCES instructor(dept_name)
+);
+
+------------------------------------------------------------
+-- Step 2: Insert Sample Data
+------------------------------------------------------------
+INSERT INTO student VALUES
+(1, 'Aman', 'Computer', 120),
+(2, 'Amrita', 'IT', 100),
+(3, 'Suman', 'Computer', 110),
+(4, 'Ramesh', 'Mechanical', 90),
+(5, 'Neha', 'Computer', 105);
+
+INSERT INTO instructor VALUES
+(101, 'Amol', 'Computer', 40000),
+(102, 'Amit', 'IT', 45000),
+(103, 'Pooja', 'Computer', 55000),
+(104, 'Rahul', 'Mechanical', 38000),
+(105, 'Sneha', 'Electrical', 60000);
+
+INSERT INTO course VALUES
+(201, 'DBMS', 'Computer', 4),
+(202, 'Operating System', 'Computer', 3),
+(203, 'Networks', 'IT', 3),
+(204, 'Thermodynamics', 'Mechanical', 3),
+(205, 'Electrical Circuits', 'Electrical', 4);
+
+COMMIT;
+
+------------------------------------------------------------
+-- ✅ QUERY i: Average salary of instructors 
+--    in departments where avg salary > 42000
+------------------------------------------------------------
+SELECT dept_name, AVG(salary) AS avg_salary
+FROM instructor
+GROUP BY dept_name
+HAVING AVG(salary) > 42000;
+
+------------------------------------------------------------
+-- ✅ QUERY ii: Increase salary of instructors 
+--    in Computer department by 10%
+------------------------------------------------------------
+UPDATE instructor
+SET salary = salary * 1.10
+WHERE dept_name = 'Computer';
+
+SELECT * FROM instructor; -- check updated salary
+
+------------------------------------------------------------
+-- ✅ QUERY iii: Instructors whose names are 
+--    neither 'Amol' nor 'Amit'
+------------------------------------------------------------
+SELECT name
+FROM instructor
+WHERE name NOT IN ('Amol', 'Amit');
+
+------------------------------------------------------------
+-- ✅ QUERY iv: Students whose names contain 'am' 
+--    as substring (case-insensitive)
+------------------------------------------------------------
+SELECT name
+FROM student
+WHERE LOWER(name) LIKE '%am%';
+
+------------------------------------------------------------
+-- ✅ QUERY v: Names of students from Computer dept 
+--    that take 'DBMS' course
+------------------------------------------------------------
+SELECT s.name AS Student_Name, c.title AS Course
+FROM student s
+JOIN course c ON s.dept_name = c.dept_name
+WHERE s.dept_name = 'Computer'
+AND c.title = 'DBMS';
