@@ -1,0 +1,92 @@
+/* 4.Unnamed PL/SQL code block: Use of Control structure and Exception handling is mandatory. 
+Write a PL/SQL block of code for the following requirements:- 
+Schema: 
+1. Borrower(Rollin, Name, DateofIssue, NameofBook, Status) 
+2. Fine(Roll_no,Date,Amt) 
+Accept roll_no & name of book from user. 
+Check the number of days (from date of issue), if days are between 15 to 30 then fine 
+amount will be Rs 5per day. 
+If no. of days>30, per day fine will be Rs 50 per day & for days less than 30, Rs. 5 per day. 
+After submitting the book, status will change from I to R. 
+If condition of fine is true, then details will be stored into fine table. 
+*/
+
+-- Drop tables if re-running
+DROP TABLE Fine;
+DROP TABLE Borrower;
+
+-- Create Borrower table
+CREATE TABLE Borrower (
+    Rollno NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    DateofIssue DATE,
+    NameofBook VARCHAR2(50),
+    Status CHAR(1)
+);
+
+-- Create Fine table
+CREATE TABLE Fine (
+    Roll_no NUMBER,
+    Date_of_Fine DATE,
+    Amt NUMBER(10,2)
+);
+
+-- Insert sample data
+INSERT INTO Borrower VALUES (101, 'Rahul', TO_DATE('2025-10-01', 'YYYY-MM-DD'), 'DBMS', 'I');
+INSERT INTO Borrower VALUES (102, 'Priya', TO_DATE('2025-09-25', 'YYYY-MM-DD'), 'Networking', 'I');
+INSERT INTO Borrower VALUES (103, 'Amit', TO_DATE('2025-10-25', 'YYYY-MM-DD'), 'Java', 'I');
+
+COMMIT;
+
+DECLARE
+    v_roll      NUMBER;
+    v_book      VARCHAR2(50);
+    v_issue_dt  DATE;
+    v_days      NUMBER;
+    v_fine_amt  NUMBER := 0;
+BEGIN
+    -- Accept input from user
+    v_roll := &Roll_No;
+    v_book := '&Book_Name';
+
+    -- Get date of issue for entered roll number and book
+    SELECT DateofIssue INTO v_issue_dt
+    FROM Borrower
+    WHERE Rollno = v_roll AND NameofBook = v_book;
+
+    -- Calculate number of days between issue date and today
+    v_days := TRUNC(SYSDATE - v_issue_dt);
+
+    -- Determine fine amount using control structure
+    IF v_days > 30 THEN
+        v_fine_amt := (v_days - 30) * 50 + (30 - 15) * 5; 
+        -- fine = Rs. 5/day for 15–30 + Rs. 50/day beyond 30
+    ELSIF v_days >= 15 THEN
+        v_fine_amt := (v_days - 15) * 5;
+    ELSE
+        v_fine_amt := 0;
+    END IF;
+
+    -- Update book status to 'R' (Returned)
+    UPDATE Borrower
+    SET Status = 'R'
+    WHERE Rollno = v_roll AND NameofBook = v_book;
+
+    -- If fine exists, insert record into Fine table
+    IF v_fine_amt > 0 THEN
+        INSERT INTO Fine VALUES (v_roll, SYSDATE, v_fine_amt);
+        DBMS_OUTPUT.PUT_LINE('Fine applied: Rs. ' || v_fine_amt);
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('No fine. Returned within time.');
+    END IF;
+
+    COMMIT;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Roll number or book not found.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An unexpected error occurred: ' || SQLERRM);
+END;
+/
+
