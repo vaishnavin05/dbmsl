@@ -1,0 +1,61 @@
+ 21.Employee(employee_name,street,city)
+Works(employee_name,company_name,salary)
+Company(company_name,city)
+Manages(employee_name,manager_name)
+ 
+1. Find the names of employees who work for First Bank Coorporation.
+2. Find the names and cities of residence of all employees who work for First Bank Coorporation
+3. Find the names, street addresses, and cities of residence of all employees who work for First Bank Coorporation and earn more than $10000. 
+4.Find all employees in the database who lives in the same cities as tha companies for which they work.
+5.Find all employees in the database who lives in the same cities and on the same streets as do their manager. 
+6.Find all employees in the database who do not work for First Bank Coorporation
+7.Give all employees of First Bank Coorporation” a 10% raise
+8.Delete all tuples in the “Works” relation for employees of “Small Bank Coorporation”.
+ */ 
+
+-- 1. Find names of employees who work for First Bank Coorporation
+SELECT e.employee_name
+FROM Employee e
+JOIN Works w ON e.employee_name = w.employee_name
+WHERE w.company_name = 'First Bank Coorporation';
+
+-- 2. Find names and cities of residence of employees who work for First Bank Coorporation
+SELECT e.employee_name, e.city
+FROM Employee e
+JOIN Works w ON e.employee_name = w.employee_name
+WHERE w.company_name = 'First Bank Coorporation';
+
+-- 3. Find names, street addresses, and cities of employees who work for First Bank Coorporation and earn > 10000
+SELECT e.employee_name, e.street, e.city
+FROM Employee e
+JOIN Works w ON e.employee_name = w.employee_name
+WHERE w.company_name = 'First Bank Coorporation' AND w.salary > 10000;
+
+-- 4. Find all employees who live in the same city as the companies they work for
+SELECT e.employee_name, e.city AS employee_city, c.city AS company_city, w.company_name
+FROM Employee e
+JOIN Works w ON e.employee_name = w.employee_name
+JOIN Company c ON w.company_name = c.company_name
+WHERE e.city = c.city;
+
+-- 5. Find all employees who live in the same city and street as their manager
+SELECT e.employee_name, e.street, e.city, m.manager_name
+FROM Employee e
+JOIN Manages mg ON e.employee_name = mg.employee_name
+JOIN Employee m ON mg.manager_name = m.employee_name
+WHERE e.city = m.city AND e.street = m.street;
+
+-- 6. Find all employees who do NOT work for First Bank Coorporation
+SELECT e.employee_name
+FROM Employee e
+JOIN Works w ON e.employee_name = w.employee_name
+WHERE w.company_name <> 'First Bank Coorporation';
+
+-- 7. Give all employees of First Bank Coorporation a 10% raise
+UPDATE Works
+SET salary = salary * 1.10
+WHERE company_name = 'First Bank Coorporation';
+
+-- 8. Delete all tuples in Works for employees of Small Bank Coorporation
+DELETE FROM Works
+WHERE company_name = 'Small Bank Coorporation';
