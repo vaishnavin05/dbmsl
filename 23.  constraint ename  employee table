@@ -1,0 +1,49 @@
+* 23.Create a table emp with following fields and constraints 
+Eno –(Constraint:- primary key and apply sequence starts with 101) ,Ename –(Constraint :- not null) 
+Address ––(Constraint :-default ‘Nashik’) ,Joindate, 
+After table creation add field - Post in the emp table. 
+Insert some data in emp table.Create Index on Ename field of employee table. 
+Create View on employee table to show only Ename and Salary. 
+ */ 
+
+-- 1. PURPOSE: Create sequence for employee numbers starting from 101
+CREATE SEQUENCE emp_seq
+START WITH 101
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+-- 2. PURPOSE: Create table "emp" with constraints
+CREATE TABLE emp (
+    Eno NUMBER PRIMARY KEY,
+    Ename VARCHAR2(100) NOT NULL,
+    Address VARCHAR2(100) DEFAULT 'Nashik',
+    Joindate DATE,
+    Salary NUMBER
+);
+
+-- 3. PURPOSE: Add field "Post" to emp table
+ALTER TABLE emp
+ADD Post VARCHAR2(50);
+
+-- 4. PURPOSE: Insert sample data into emp table using sequence
+INSERT INTO emp (Eno, Ename, Address, Joindate, Salary, Post)
+VALUES (emp_seq.NEXTVAL, 'Navin', 'Pune', DATE '2023-01-15', 50000, 'Manager');
+
+INSERT INTO emp (Eno, Ename, Address, Joindate, Salary, Post)
+VALUES (emp_seq.NEXTVAL, 'Anusha', DEFAULT, DATE '2022-07-10', 45000, 'Developer');
+
+INSERT INTO emp (Eno, Ename, Address, Joindate, Salary, Post)
+VALUES (emp_seq.NEXTVAL, 'Ravi', 'Mumbai', DATE '2021-03-20', 40000, 'Analyst');
+
+-- 5. PURPOSE: Create index on Ename field
+CREATE INDEX idx_emp_name ON emp(Ename);
+
+-- 6. PURPOSE: Create a view to show only Ename and Salary
+CREATE VIEW emp_view AS
+SELECT Ename, Salary
+FROM emp;
+
+-- 7. PURPOSE: Verify inserted data and view
+SELECT * FROM emp;
+SELECT * FROM emp_view;
