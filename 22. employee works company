@@ -1,0 +1,75 @@
+22.Employee(employee_name,street,city)
+Works(employee_name,company_name,salary)
+Company(company_name,city)
+Manages(employee_name,manager_name)
+1)	Find all employees in the database who earn more than each employee of  Small  Bank  Coorporation
+2)	Assume that the company is may be located in several cities. Find all companies located in every city in which Small Bank Coorporation is located.
+3)	Find all employees who earn more than the average salary of all employees of their companies.
+4)	Find the company that has the most employees.
+5)	Find the company that has the smallest payroll.
+6)	Find those companies whose employees earn a higher salary, on average, than the average salary at First Bank Coorporation. 
+7)	Modify the database so that “Jones” now lives in Newtown.
+ */ 
+
+-- 1) Find all employees who earn more than each employee of Small Bank Coorporation
+SELECT e.employee_name, w.salary
+FROM Employee e
+JOIN Works w ON e.employee_name = w.employee_name
+WHERE w.salary > ALL (
+    SELECT salary 
+    FROM Works 
+    WHERE company_name = 'Small Bank Coorporation'
+);
+
+-- 2) Find all companies located in every city in which Small Bank Coorporation is located
+SELECT c.company_name
+FROM Company c
+WHERE NOT EXISTS (
+    SELECT sbc.city
+    FROM Company sbc
+    WHERE sbc.company_name = 'Small Bank Coorporation'
+      AND sbc.city NOT IN (
+        SELECT c2.city
+        FROM Company c2
+        WHERE c2.company_name = c.company_name
+      )
+);
+
+-- 3) Find all employees who earn more than the average salary of all employees of their company
+SELECT e.employee_name, w.salary, w.company_name
+FROM Employee e
+JOIN Works w ON e.employee_name = w.employee_name
+WHERE w.salary > (
+    SELECT AVG(salary)
+    FROM Works
+    WHERE company_name = w.company_name
+);
+
+-- 4) Find the company that has the most employees
+SELECT w.company_name, COUNT(*) AS employee_count
+FROM Works w
+GROUP BY w.company_name
+ORDER BY employee_count DESC
+FETCH FIRST 1 ROW ONLY;
+
+-- 5) Find the company that has the smallest payroll
+SELECT w.company_name, SUM(w.salary) AS total_payroll
+FROM Works w
+GROUP BY w.company_name
+ORDER BY total_payroll ASC
+FETCH FIRST 1 ROW ONLY;
+
+-- 6) Find companies whose employees earn higher salary on average than First Bank Coorporation
+SELECT w.company_name
+FROM Works w
+GROUP BY w.company_name
+HAVING AVG(w.salary) > (
+    SELECT AVG(salary) 
+    FROM Works 
+    WHERE company_name = 'First Bank Coorporation'
+);
+
+-- 7) Modify the database so that "Jones" now lives in Newtown
+UPDATE Employee
+SET city = 'Newtown'
+WHERE employee_name = 'Jones';
