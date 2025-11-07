@@ -1,0 +1,38 @@
+* 20.Empl(e_no, e_name, post, pay_rate) 
+Position(pos_no, post) 
+Duty-alloc (pos_no, e_no, month,year, shift) 
+Implement the following SQL queries 
+i. Get duty allocation details for e_no 123 for the first shift in the month of April 2003 
+ii. Get the employees whose rate of pay is > or equal rate of pay of employees 'Sachin'. 
+iii. Create a view for displaying minimum, maximum and average salary for all the posts. 
+iv. Get count of different employees on each shift having post ‘manager’. 
+*/ 
+
+-- i. Get duty allocation details for e_no 123 for the first shift in April 2003
+SELECT *
+FROM Duty_alloc
+WHERE e_no = 123
+  AND month = 'April'
+  AND year = 2003
+  AND shift = 1;
+
+-- ii. Get employees whose pay_rate >= pay_rate of employee 'Sachin'
+SELECT *
+FROM Empl
+WHERE pay_rate >= (SELECT pay_rate FROM Empl WHERE e_name = 'Sachin');
+
+-- iii. Create a view for minimum, maximum, and average salary for all posts
+CREATE VIEW Post_Salary_Stats AS
+SELECT post,
+       MIN(pay_rate) AS Min_Salary,
+       MAX(pay_rate) AS Max_Salary,
+       AVG(pay_rate) AS Avg_Salary
+FROM Empl
+GROUP BY post;
+
+-- iv. Get count of different employees on each shift having post 'manager'
+SELECT da.shift, COUNT(DISTINCT da.e_no) AS Employee_Count
+FROM Duty_alloc da
+JOIN Empl e ON da.e_no = e.e_no
+WHERE e.post = 'manager'
+GROUP BY da.shift;emp
