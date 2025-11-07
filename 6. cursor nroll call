@@ -1,0 +1,73 @@
+* 6.Cursors: (Implicit and Explicit Cursor). 
+Write a PL/SQL block of code using parameterized Cursor, 
+that will merge the data available in the newly created table N_RollCall 
+with the data available in the table O_RollCall. 
+If the data in the first table already exist in the second table then
+ that data should be skipped.*/ 
+
+-- PURPOSE: Create target table that will receive merged data
+CREATE TABLE O_RollCall (
+  student_id   NUMBER,
+  student_name VARCHAR2(100),
+  class_name   VARCHAR2(50),
+  roll_no      NUMBER,
+  attend_date  DATE,
+  CONSTRAINT pk_o_roll PRIMARY KEY (student_id, attend_date)
+);
+
+-- PURPOSE: Create source table containing new records
+CREATE TABLE N_RollCall (
+  student_id   NUMBER,
+  student_name VARCHAR2(100),
+  class_name   VARCHAR2(50),
+  roll_no      NUMBER,
+  attend_date  DATE
+);
+
+-- PURPOSE: Insert sample data into N_RollCall
+INSERT INTO N_RollCall VALUES (101, 'Asha Kapoor', '10A', 1, DATE '2025-11-01');
+INSERT INTO N_RollCall VALUES (102, 'Ravi Singh',  '10A', 2, DATE '2025-11-01');
+INSERT INTO N_RollCall VALUES (103, 'Meera Patel',  '10B', 3, DATE '2025-11-01');
+INSERT INTO N_RollCall VALUES (101, 'Asha Kapoor', '10A', 1, DATE '2025-11-02');
+COMMIT;
+
+-- PURPOSE: Insert one row into O_RollCall to show skipping behavior
+INSERT INTO O_RollCall VALUES (101, 'Asha Kapoor', '10A', 1, DATE '2025-11-01');
+COMMIT;
+
+-- PURPOSE: PL/SQL block to merge data using parameterized explicit cursor
+--          and implicit cursor loop; skip rows that already exist
+SET SERVEROUTPUT ON
+DECLARE
+  CURSOR c_exists(p_sid NUMBER, p_adate DATE) IS
+    SELECT 1 FROM O_RollCall
+    WHERE student_id = p_sid
+      AND attend_date = p_adate;
+
+  v_dummy NUMBER;
+BEGIN
+  FOR rec IN (SELECT student_id, student_name, class_name, roll_no, attend_date
+              FROM N_RollCall) LOOP
+
+    v_dummy := NULL;
+    OPEN c_exists(rec.student_id, rec.attend_date);
+    FETCH c_exists INTO v_dummy;
+
+    IF c_exists%FOUND THEN
+      NULL;  -- PURPOSE: Skip existing rows
+    ELSE
+      -- PURPOSE: Insert non-duplicate row
+      INSERT INTO O_RollCall (student_id, student_name, class_name, roll_no, attend_date)
+      VALUES (rec.student_id, rec.student_name, rec.class_name, rec.roll_no, rec.attend_date);
+    END IF;
+
+    CLOSE c_exists;
+  END LOOP;
+
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Merge complete.');
+END;
+/
+
+-- PURPOSE: View merged final output
+SELECT * FROM O_RollCall ORDER BY student_id, attend_date;
